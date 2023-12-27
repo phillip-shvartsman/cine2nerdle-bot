@@ -1,0 +1,21 @@
+{
+  "name": "Cine2Nerdle Movie Battle Helper",
+  "description": "Helps you do battle in cine2nerdle by providing google links to all connections and movies",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "hello.html",
+    "default_icon": "icon.png"
+  },
+  "permissions": [
+    "tabs",
+    "activeTab"
+  ],
+  "content_scripts": [
+  {
+    "matches": ["https://www.cinenerdle2.app/battle*"],
+    "css": ["styles.css"],
+    "js": ["content-script.js"]
+  }
+  ]
+}
