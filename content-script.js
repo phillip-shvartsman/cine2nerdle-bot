@@ -69,7 +69,7 @@ function main_task() {
 	  });
 
 	connections.filter(con => con.classList.contains(helper_class_name) === false).forEach(con => {
-		let parent_node = con.parentNode
+		//let parent_node = con.parentNode
 		//if(parent_node.classList.contains(expanded_connection_class))
 		//{
 		//	con.classList.add(helper_class_name);
