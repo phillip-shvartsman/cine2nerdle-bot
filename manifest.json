@@ -16,11 +16,11 @@
   {
     "matches": ["https://www.cinenerdle2.app/battle*"],
     "css": ["styles.css"],
-    "js": ["content-script.js"]
+    "js": ["dist/contentApp.js"]
   }
   ],
   "background": {
-    "service_worker": "background.js",
+    "service_worker": "dist/backgroundApp.js",
     "persistant": false
   },
     "host_permissions": [
