@@ -1,8 +1,15 @@
+// max 30 messages a second
 var min_delay_ms = 1/30 * 1000;
 var last_send = Date.now();
 var current_time;
+
+// number of actors to get per movie
 const MAX_NUM_ACTORS_PER_MOVIE = 10;
+
+// number of the movies to get per actor
 const MAX_NUM_MOVIES_PER_ACTOR = 10;
+
+// wait between api queries
 function wait_for_min_delay()
 {
     let current_time = Date.now();
@@ -13,14 +20,19 @@ function wait_for_min_delay()
     }
     last_send = current_time
 }
-let token = undefined;
 
+let token = undefined;
+// make sure a token exists
 async function getToken()
 {
   const tmdb_api_key = "tmdb_api_key"
   if(token === undefined)
   {
       let bearer_token_result = await chrome.storage.local.get([tmdb_api_key]);
+      if(bearer_token_result === undefined)
+      {
+        throw new Error("Can not find bearer token")
+      }
       token = bearer_token_result[tmdb_api_key]  
       console.log(`Found token ${token}`)
       return true;
@@ -78,6 +90,7 @@ async function getActorMovieCredits(id)
   return response.json()
 }
 
+// check if an actor exists in local storage
 async function actorSaved(name)
 {
   let actor_result = await chrome.storage.local.get([name]);
@@ -96,6 +109,7 @@ chrome.runtime.onMessage.addListener(async function (message, sender, senderResp
   console.log(message)
   if (message.type === "movie") 
   {
+    // first get movie data including tmdb internal id for a movie
     let title = message.title
     let year = message.year
     let local_id = message.local_id
@@ -119,11 +133,10 @@ chrome.runtime.onMessage.addListener(async function (message, sender, senderResp
     console.log(first_result)
     let movie_id = first_result.id;
 
+    // get the list of actors playing in the movie
     let credits = await getMovieCredits(movie_id)
-    //console.log("Credits:")
-
     let cast = credits.cast
-    //console.log(cast)
+    // sort and keep only top ten actors
     let sorted_cast = cast.sort((a,b)=>{
       if(a.popularity < b.popularity)
       {
@@ -134,7 +147,6 @@ chrome.runtime.onMessage.addListener(async function (message, sender, senderResp
         return -1;
       }
     })
-    //console.log(sorted_cast)
     let most_popular_cast = []
     if(sorted_cast.length <= MAX_NUM_ACTORS_PER_MOVIE)
     {
@@ -144,6 +156,7 @@ chrome.runtime.onMessage.addListener(async function (message, sender, senderResp
     {
       most_popular_cast = sorted_cast.slice(0,MAX_NUM_ACTORS_PER_MOVIE)
     }
+    // clean out actors to save only useful info
     for(let actor of most_popular_cast)
     {
       delete actor.adult
@@ -156,10 +169,12 @@ chrome.runtime.onMessage.addListener(async function (message, sender, senderResp
       delete actor.original_name
       delete actor.profile_path
     }
-    //console.log(most_popular_cast)
+
+    // save in movie data
     first_result["cast"] = most_popular_cast
     first_result["year"] = year
 
+    // now loop through actors and get their most popular movies
     let most_popular_cast_clone = structuredClone(most_popular_cast)
     for(let actor of most_popular_cast_clone)
     {
@@ -172,6 +187,7 @@ chrome.runtime.onMessage.addListener(async function (message, sender, senderResp
       {
         let actor_credits = await getActorMovieCredits(actor.id);
         let cast_credits = actor_credits.cast
+        // sort and keep their most popular movies
         let sorted_cast_credits = cast_credits.sort((a,b)=>{
           if(a.popularity < b.popularity)
           {
@@ -191,8 +207,8 @@ chrome.runtime.onMessage.addListener(async function (message, sender, senderResp
         {
           most_popular_credited = sorted_cast_credits.slice(0,MAX_NUM_MOVIES_PER_ACTOR)
         }
-        //console.log(most_popular_credited)
         actor["credited"] = most_popular_credited
+        // clean out actor movie results
         for(let credit of actor["credited"])
         {
           delete credit.adult 
@@ -206,7 +222,6 @@ chrome.runtime.onMessage.addListener(async function (message, sender, senderResp
           delete credit.poster_path
           delete credit.video
         }
-        console.log(actor)
         let set_actor = {}
         set_actor[`${actor.name}`] = actor
         await chrome.storage.local.set(set_actor);
@@ -216,5 +231,6 @@ chrome.runtime.onMessage.addListener(async function (message, sender, senderResp
     set_movie[`${local_id}`] = first_result
     await chrome.storage.local.set(set_movie)
   }
+  // this does nothing since we are using an async function
   senderResponse({farewell: "goodbye"});
 });
