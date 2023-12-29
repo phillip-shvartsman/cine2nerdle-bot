@@ -3,6 +3,8 @@ const CHAR_PER_MS = (1 / (300 / 60)) * 1000
 let current_year = new Date().getFullYear()
 var all_options = []
 var pop_sum = 0
+var inital_cast_multiplier = 2
+var cast_popularity_adjustment = 0.95
 var guess_done = false
 
 let all_played_movies = []
@@ -316,6 +318,9 @@ async function main_task()
             document.getElementById(battle_helper_id).append(move_title)
 
             let data = response[last_local_id];
+            // the cast is ordered by popularity, add extra popularity to the more popular cast member movies,
+            // so that we choose their movies more often
+            let cast_multiplier = inital_cast_multiplier
             // loop through the top cast of the movie and grab from local storage
             for (let cast_member of data["cast"])
             {
@@ -335,14 +340,14 @@ async function main_task()
                 let actor_response = await chrome.storage.local.get([cast_member["name"]])
                 if ('name' in actor_response[cast_member["name"]])
                 {
-                    actor_p.textContent = actor_response[cast_member["name"]]["name"]
+                    actor_p.textContent = `${actor_response[cast_member["name"]]["name"]} ${cast_multiplier}`
                     for (let credit of actor_response[cast_member["name"]]["credited"])
                     {
                         let release_year = credit["release_date"].substring(0, 4);
-                        actor_p.textContent = actor_p.textContent.concat(
-                            `|${credit['original_title']} (${release_year})`)
+                        let popularity = credit["popularity"] * cast_multiplier
+
                         let to_push_title = `${credit['original_title']} (${release_year})`;
-                        let popularity = credit["popularity"]
+
                         // we use popularity to weight which movie to play
                         // set to zero if the movie has already been played
                         for (let played_movie of all_played_movies)
@@ -362,11 +367,14 @@ async function main_task()
                             title: to_push_title,
                             popularity: popularity
                         })
+                        actor_p.textContent = actor_p.textContent.concat(
+                            `|${credit['original_title']} (${release_year}) ${popularity}`)
                         // keep track of the total popularity
                         pop_sum = pop_sum + popularity
                     }
                     document.getElementById(battle_helper_id).append(actor_p)
                 }
+                cast_multiplier = cast_multiplier * cast_popularity_adjustment
             }
         }
         else

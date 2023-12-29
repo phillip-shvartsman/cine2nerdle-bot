@@ -3,11 +3,11 @@ var min_delay_ms = 1 / 30 * 1000;
 var last_send = Date.now();
 var current_time;
 
-// number of actors to get per movie
-const MAX_NUM_ACTORS_PER_MOVIE = 10;
+// number of actors to get per movie, increasing this will make the bot win much more quickly
+const MAX_NUM_ACTORS_PER_MOVIE = 5;
 
-// number of the movies to get per actor
-const MAX_NUM_MOVIES_PER_ACTOR = 10;
+// number of the movies to get per actor, increasing this will make the bot win much more quickly
+const MAX_NUM_MOVIES_PER_ACTOR = 5;
 
 // wait between api queries
 function wait_for_min_delay()
@@ -229,7 +229,11 @@ chrome.runtime.onMessage.addListener(async function(message, sender, senderRespo
                     delete credit.credit_id
                     delete credit.genre_ids
                     delete credit.order
-                    delete credit.original_language
+                    // prevent us from using foreign movies
+                    if (credit.original_language != "en")
+                    {
+                        credit.popularity = 0
+                    }
                     delete credit.overview
                     delete credit.poster_path
                     delete credit.video
