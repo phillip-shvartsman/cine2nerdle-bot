@@ -5,7 +5,9 @@
     "toastr": "^2.1.4"
   },
   "devDependencies": {
+    "eslint": "^8.56.0",
     "js-beautify": "^1.14.11",
+    "jslint-cli": "^20201106.0.0",
     "pnp-webpack-plugin": "^1.7.0",
     "watch": "^1.0.2",
     "webpack": "^5.89.0",
@@ -13,6 +15,13 @@
   },
   "scripts": {
     "build": "webpack",
-    "dev-build": "watch webpack ./src"
+    "dev-build": "watch webpack ./src",
+    "beautify": "js-beautify -f src/menu_script.js src/content-script.js src/background.js -r -b expand -w 120",
+    "lint": "eslint src/*"
+  },
+  "eslintConfig": {
+    "parserOptions": {
+      "ecmaVersion": 8
+    }
   }
 }
