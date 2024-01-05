@@ -6,4 +6,4 @@ Scrapes the cine2nerdle battle page for the current movie titles and game state.
 
 Everything is basic javascript/html and webpack (for some reason....)
 
-
+For TMDB, please use the READ ACCESS TOKEN, not the API KEY. 
