@@ -124,11 +124,9 @@ chrome.runtime.onMessage.addListener(async function(message, sender, senderRespo
         let year = message.year
         let local_id = message.local_id
         let movie_data = await getMovieData(title, year)
-        //console.log("Movie Data:")
-        //console.log(movie_data)
+        console.log("Movie Data:")
+        console.log(movie_data)
         let first_result = movie_data.results[0];
-
-        console.log(first_result)
         // clean out first result
         delete first_result["adult"]
         delete first_result["backdrop_path"]
@@ -245,6 +243,8 @@ chrome.runtime.onMessage.addListener(async function(message, sender, senderRespo
         }
         let set_movie = {}
         set_movie[`${local_id}`] = first_result
+        console.log(`Setting key ${local_id}`)
+        console.log(first_result)
         await chrome.storage.local.set(set_movie)
     }
     // this does nothing since we are using an async function
